@@ -5,7 +5,6 @@ from django.conf import settings
 import uuid
 
 
-
 # Create your models here.
 class Asset(models.Model):
     identifier = models.UUIDField(primary_key=True, default=uuid.uuid4)
@@ -86,7 +85,7 @@ class DerivativeImage(ImageAsset):
     def image_class(self):
         return self.parent.image_class
 
-    def save(self):
+    def save(self, *args, **kwargs):
         dims = IMAGE_PROFILE_DATA[self.image_class][self.image_class_size]
         parent_path = self.parent.file_path
         image_path = make_image_path(settings.DERIVATIVE_BASE_PATH)

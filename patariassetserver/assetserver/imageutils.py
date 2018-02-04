@@ -46,13 +46,14 @@ class ImageMagickWrapper(object):
         :param input_path:
         :param output_path:
         :param dimensions: Like {'width': 125, 'height': 125}
+        :param quality:
         :param density: None for omit else int density to resample
         :return:
         """
         input_props = ImageMagickWrapper.get_properties(input_path)
         print(repr(input_props))
-        if not (dimensions.get('width') < input_props.get('width') and \
-            dimensions.get('height') < input_props.get('height')):
+        if not (dimensions.get('width') < input_props.get('width') and
+                dimensions.get('height') < input_props.get('height')):
             raise Exception('Can Only Downscale. Your Original image is too small')
 
         args = [
