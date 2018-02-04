@@ -23,6 +23,7 @@ class ImageMagickWrapper(object):
     def get_properties(file_path):
         cmd = 'identify -format "%m %G %x %y" {}'.format(file_path)
         output = execute_cmd(cmd)
+        print(repr(output.split(' ')))
         (format_str, dim_str, xdensity, ydensity) = output.split(' ')
         (width, height) = dim_str.split('x')
 
@@ -41,12 +42,12 @@ class ImageMagickWrapper(object):
                          quality=80,
                          density=None):
         """
-        
-        :param input_path: 
-        :param output_path: 
+
+        :param input_path:
+        :param output_path:
         :param dimensions: Like {'width': 125, 'height': 125}
         :param density: None for omit else int density to resample
-        :return: 
+        :return:
         """
         input_props = ImageMagickWrapper.get_properties(input_path)
         print(repr(input_props))
@@ -76,12 +77,16 @@ class ImageMagickWrapper(object):
 
 
 if __name__ == "__main__":
-    #print(make_image_path('/Users/afrobeard/Scratch/assets/derivatives'))
     """
-    ImageMagickWrapper.create_thumbnail('/usr/share/doc/ntp/pic/stack1a.jpg',
-                                        '/Users/afrobeard/monkeyman.jpg',
-                                        {'width': 50, 'height': 50}, density=10)
-    """
+    print(make_image_path('/Users/afrobeard/Scratch/assets/derivatives'))
+    
+ImageMagickWrapper.create_thumbnail('/usr/share/doc/ntp/pic/stack1a.jpg',
+                                    '/Users/afrobeard/monkeyman.jpg',
+                                    {'width': 50, 'height': 50}, density=10)
 
-    #from assetserver.models import *;
-    #MasterImage.create_from_path('/Users/afrobeard/Downloads/20170819_153318.jpg', 'bozo', 1)
+
+from assetserver.models import *;
+path = '/Users/afrobeard/Scratch/whitehorse.jpg'
+m1 = MasterImage.create_from_path(path, 'bozo', 1)
+    
+    """

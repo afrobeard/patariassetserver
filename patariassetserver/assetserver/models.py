@@ -67,6 +67,16 @@ class ImageAsset(Asset):
         image_object.type = matched_type_rec[0]
         return image_object
 
+    def get_json(self):
+        return {
+            'guid': str(self.identifier),
+            'type': dict(IMAGE_TYPES)[self.type],
+            'image_size': self.file_size,
+            'checksum': self.checksum,
+            'width': self.width,
+            'height': self.height,
+        }
+
 
 class DerivativeImage(ImageAsset):
     parent = models.ForeignKey('MasterImage')
@@ -80,12 +90,30 @@ class DerivativeImage(ImageAsset):
         dims = IMAGE_PROFILE_DATA[self.image_class][self.image_class_size]
         parent_path = self.parent.file_path
         image_path = make_image_path(settings.DERIVATIVE_BASE_PATH)
-        ImageMagickWrapper.create_thumbnail(parent_path, image_path, dims)
+        thumbnail_path = ImageMagickWrapper.create_thumbnail(parent_path, image_path, dims)
+        self.file_path = thumbnail_path
+        ImageAsset.populate_image_fields(self)  # To get all the properties
+        super(DerivativeImage, self).save()  # Save the super class
+
+    def get_json(self):
+        ret_json = super(DerivativeImage, self).get_json()
+        ret_json.update({
+            'derivative_class_size': dict(IMAGE_CLASS_SIZES).get(self.image_class_size)
+        })
+        return ret_json
 
 
 class MasterImage(ImageAsset):
     external_identifier = models.CharField(max_length=100)
     image_class = models.IntegerField(choices=IMAGE_CLASSES)
+
+    def get_json(self):
+        ret_json = super(MasterImage, self).get_json()
+        ret_json.update({
+            'class': dict(IMAGE_CLASSES).get(self.image_class),
+            'derivatives': [derivative.get_json() for derivative in self.derivatives]
+        })
+        return ret_json
 
     @staticmethod
     def create_from_path(file_path, external_identifier, image_class):
@@ -95,16 +123,21 @@ class MasterImage(ImageAsset):
         image.image_class = image_class
         image.save()
         image.create_derivatives()
+        return image
 
     def create_derivatives(self):
         master_image = self
         image_class_sizes = IMAGE_PROFILE_DATA[master_image.image_class]
+        print('PROFILE DATA', repr(image_class_sizes))
+
+        derivatives = []
         for image_class_size in image_class_sizes:
             di = DerivativeImage(parent=master_image, image_class_size=image_class_size)
             di.save()
+            derivatives.append(di)
 
+        return derivatives
 
-
-
-
-
+    @property
+    def derivatives(self):
+        return DerivativeImage.objects.filter(parent=self.identifier)
