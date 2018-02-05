@@ -103,19 +103,21 @@ class DerivativeImage(ImageAsset):
 
 
 class MasterImage(ImageAsset):
-    external_identifier = models.CharField(max_length=100)
+    external_identifier = models.CharField(max_length=100, null=True)
     image_class = models.IntegerField(choices=IMAGE_CLASSES)
 
     def get_json(self):
         ret_json = super(MasterImage, self).get_json()
         ret_json.update({
             'class': dict(IMAGE_CLASSES).get(self.image_class),
+            'external_identifier': self.external_identifier,
             'derivatives': [derivative.get_json() for derivative in self.derivatives]
         })
         return ret_json
 
     @staticmethod
     def create_from_path(file_path, external_identifier, image_class):
+        print(repr((file_path, external_identifier, image_class)))
         image = MasterImage(file_path=file_path)
         ImageAsset.populate_image_fields(image)
         image.external_identifier = external_identifier

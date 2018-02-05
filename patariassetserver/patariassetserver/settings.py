@@ -50,6 +50,8 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+TRANSFER_SERVER = 'nginx'  # From 'apache', 'nginx', 'lighttpd'
+
 ROOT_URLCONF = 'patariassetserver.urls'
 
 TEMPLATES = [
