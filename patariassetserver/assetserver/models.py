@@ -34,6 +34,8 @@ IMAGE_CLASS_SIZES = [
     (2, 'large'),
 ]
 
+IMAGE_CLASS_SIZES_REVERSE = dict([(x[1], x[0]) for x in IMAGE_CLASS_SIZES])
+
 IMAGE_PROFILE_DATA = {  # Maybe in the future this can be parsed from a json file
     0: {1: {'width': 900, 'height': 200}},  # Media Banner
     2: {1: {'width': 1181, 'height': 220}},  # Nav Banner

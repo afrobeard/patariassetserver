@@ -1,9 +1,8 @@
-from django.shortcuts import render
-from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
-from assetserver.models import IMAGE_CLASSES, MasterImage
+from assetserver.models import IMAGE_CLASSES, IMAGE_CLASS_SIZES_REVERSE, MasterImage, DerivativeImage
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from assetserver.utils import make_error_obj_from_validation_error
+from uuid import UUID
 
 
 @csrf_exempt
@@ -12,7 +11,9 @@ def ingest_image(request):
         image_path = request.META.get('HTTP_X_FILE_NAME')
         external_identifier = request.GET.get('external_identifier')
         if image_path is None:
-            return JsonResponse({"nofile": True})
+            resp = JsonResponse({"error_message": "image path not coming through"})
+            resp.status_code = 400
+            return resp
         image_class = request.GET.get('class', 'media_tile')
         image_class_int = dict([(x[1], x[0]) for x in IMAGE_CLASSES]).get(image_class)
         try:
@@ -33,3 +34,40 @@ def ingest_image(request):
                                      "internal_error_message": internal_error_message})
                 resp.status_code = 400
             return resp
+
+
+@csrf_exempt
+def get_asset_info(request, guid):
+    if not guid:
+        resp = JsonResponse({"error_message": "guid not supplied"})
+        resp.status_code = 400
+        return resp
+    image = MasterImage.objects.get(identifier=UUID(guid))
+    return JsonResponse(image.get_json())
+
+@csrf_exempt
+def get_derivative_info(request, guid, size):
+    size = size if size else "medium"
+
+    if not guid or size not in IMAGE_CLASS_SIZES_REVERSE.keys():
+        resp = JsonResponse({"error_message": "guid not supplied or invalid size"})
+        resp.status_code = 400
+        return resp
+    derivative_image = DerivativeImage.objects.get(image_class_size=IMAGE_CLASS_SIZES_REVERSE[size],
+                                parent=UUID(guid))
+    return JsonResponse(derivative_image.get_json())
+
+
+@csrf_exempt
+def get_derivative(request, guid, size):
+    size = size if size else "medium"
+
+    if not guid or size not in IMAGE_CLASS_SIZES_REVERSE.keys():
+        resp = JsonResponse({"error_message": "guid not supplied or invalid size"})
+        resp.status_code = 400
+        return resp
+    derivative_image = DerivativeImage.objects.get(image_class_size=IMAGE_CLASS_SIZES_REVERSE[size],
+                                parent=UUID(guid))
+    pass  # TODO resolve and serve path & Set all of the relevant HTTP Headers
+    return JsonResponse(derivative_image.get_json())
+
