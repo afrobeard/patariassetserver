@@ -8,9 +8,9 @@ import uuid
 # Create your models here.
 class Asset(models.Model):
     identifier = models.UUIDField(primary_key=True, default=uuid.uuid4)
-    file_path = models.CharField(max_length=100)
+    file_path = models.CharField(max_length=200)
     file_size = models.IntegerField()  # Computed
-    checksum = models.CharField(max_length=25)  # Computed
+    checksum = models.CharField(max_length=100)  # Computed
     created_date = models.DateTimeField(auto_now_add=True)  # Auto Generated
 
     class Meta:
