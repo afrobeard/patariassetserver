@@ -144,3 +144,7 @@ class MasterImage(ImageAsset):
     @property
     def derivatives(self):
         return DerivativeImage.objects.filter(parent=self.identifier)
+
+
+    def __str__(self):
+        return "ID: {} ExternalID: {}".format(self.identifier, self.external_identifier)
