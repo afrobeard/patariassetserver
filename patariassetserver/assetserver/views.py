@@ -1,8 +1,11 @@
 from assetserver.models import IMAGE_CLASSES, IMAGE_CLASS_SIZES_REVERSE, MasterImage, DerivativeImage
 from django.views.decorators.csrf import csrf_exempt
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from assetserver.utils import make_error_obj_from_validation_error
+from assetserver.imageutils import make_image_path
+from patariassetserver import settings
 from uuid import UUID
+import shutil
 
 
 @csrf_exempt
@@ -17,8 +20,9 @@ def ingest_image(request):
         image_class = request.GET.get('class', 'media_tile')
         image_class_int = dict([(x[1], x[0]) for x in IMAGE_CLASSES]).get(image_class)
         try:
-            pass  # TODO Needs to create a copy of this instead of letting it live in tmp
-            image = MasterImage.create_from_path(image_path, external_identifier, image_class_int)
+            image_path_copy = make_image_path(settings.ORIGINAL_BASE_PATH)
+            shutil.copyfile(image_path, image_path_copy)
+            image = MasterImage.create_from_path(image_path_copy, external_identifier, image_class_int)
             return JsonResponse(image.get_json())
         except Exception as e:
             from traceback import print_exc, print_stack
@@ -46,7 +50,7 @@ def get_asset_info(request, guid):
     return JsonResponse(image.get_json())
 
 @csrf_exempt
-def get_derivative_info(request, guid, size):
+def get_derivative_info(request, guid, size=None):
     size = size if size else "medium"
 
     if not guid or size not in IMAGE_CLASS_SIZES_REVERSE.keys():
@@ -59,7 +63,7 @@ def get_derivative_info(request, guid, size):
 
 
 @csrf_exempt
-def get_derivative(request, guid, size):
+def get_derivative(request, guid, size=None):
     size = size if size else "medium"
 
     if not guid or size not in IMAGE_CLASS_SIZES_REVERSE.keys():
@@ -68,6 +72,9 @@ def get_derivative(request, guid, size):
         return resp
     derivative_image = DerivativeImage.objects.get(image_class_size=IMAGE_CLASS_SIZES_REVERSE[size],
                                 parent=UUID(guid))
-    pass  # TODO resolve and serve path & Set all of the relevant HTTP Headers
-    return JsonResponse(derivative_image.get_json())
-
+    response = HttpResponse(derivative_image.get_json(), status=200)
+    file_path = derivative_image.file_path
+    file_path_li = ['', 'media'] + file_path.split('/')[-4:] # derivatives/2018/2/guid.jpeg
+    response['Content-Type'] = 'image/jpeg'
+    response['X-Accel-Redirect'] = "/".join(file_path_li)
+    return response

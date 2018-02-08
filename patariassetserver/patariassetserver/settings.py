@@ -102,8 +102,8 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-ORIGINAL_BASE_PATH = '/Users/afrobeard/Scratch/assets/original'
-DERIVATIVE_BASE_PATH = '/Users/afrobeard/Scratch/assets/derivatives'
+ORIGINAL_BASE_PATH = '/Users/afrobeard/Scratch/media/original'
+DERIVATIVE_BASE_PATH = '/Users/afrobeard/Scratch/media/derivatives'
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.11/topics/i18n/
