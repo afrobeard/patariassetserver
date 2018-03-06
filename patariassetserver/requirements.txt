@@ -2,3 +2,4 @@ django==1.11.1
 django-transfer
 pathlib
 psycopg2
+azure-storage

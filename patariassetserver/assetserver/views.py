@@ -6,6 +6,7 @@ from assetserver.imageutils import make_image_path
 from patariassetserver import settings
 from uuid import UUID
 import shutil
+from azure.storage.blob import BlockBlobService
 
 
 @csrf_exempt
@@ -49,6 +50,7 @@ def get_asset_info(request, guid):
     image = MasterImage.objects.get(identifier=UUID(guid))
     return JsonResponse(image.get_json())
 
+
 @csrf_exempt
 def get_derivative_info(request, guid, size=None):
     size = size if size else "medium"
@@ -57,8 +59,7 @@ def get_derivative_info(request, guid, size=None):
         resp = JsonResponse({"error_message": "guid not supplied or invalid size"})
         resp.status_code = 400
         return resp
-    derivative_image = DerivativeImage.objects.get(image_class_size=IMAGE_CLASS_SIZES_REVERSE[size],
-                                parent=UUID(guid))
+    derivative_image = DerivativeImage.objects.get(image_class_size=IMAGE_CLASS_SIZES_REVERSE[size], parent=UUID(guid))
     return JsonResponse(derivative_image.get_json())
 
 
@@ -70,11 +71,40 @@ def get_derivative(request, guid, size=None):
         resp = JsonResponse({"error_message": "guid not supplied or invalid size"})
         resp.status_code = 400
         return resp
-    derivative_image = DerivativeImage.objects.get(image_class_size=IMAGE_CLASS_SIZES_REVERSE[size],
-                                parent=UUID(guid))
+    derivative_image = DerivativeImage.objects.get(image_class_size=IMAGE_CLASS_SIZES_REVERSE[size], parent=UUID(guid))
     response = HttpResponse(derivative_image.get_json(), status=200)
     file_path = derivative_image.file_path
-    file_path_li = ['', 'media'] + file_path.split('/')[-4:] # derivatives/2018/2/guid.jpeg
+    file_path_li = ['', 'media'] + file_path.split('/')[-4:]  # derivatives/2018/2/guid.jpeg
     response['Content-Type'] = 'image/jpeg'
     response['X-Accel-Redirect'] = "/".join(file_path_li)
     return response
+
+
+@csrf_exempt
+def upload_to_azure(request):
+    if request.method == "POST":
+        image_path = request.META.get('HTTP_X_FILE_NAME')
+        blob_name = request.GET.get('blob')
+
+        if blob_name is None or image_path is None:
+            resp = JsonResponse({"error_message": "Missing parameters"})
+            resp.status_code = 400
+            return resp
+
+        block_blob_service = BlockBlobService(account_name=settings.AZURE_ACCOUNT_NAME,
+                                              account_key=settings.AZURE_ACCOUNT_KEY)
+        try:
+            block_blob_service.create_blob_from_path(container_name=settings.AZURE_CONTAINER_NAME,
+                                                     blob_name=blob_name,
+                                                     file_path=image_path)
+            response = JsonResponse({"message": "Success"})
+            response.status_code = 200
+        except Exception as e:
+            print(e)
+            response = JsonResponse({"message": "Something went wrong"})
+            response.status_code = 500
+        return response
+    else:
+        res = JsonResponse({"error_message": "Wrong Method"})
+        res.status_code = 400
+        return res
