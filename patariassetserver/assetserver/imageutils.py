@@ -52,8 +52,8 @@ class ImageMagickWrapper(object):
         """
         input_props = ImageMagickWrapper.get_properties(input_path)
         print(repr(input_props))
-        if not (dimensions.get('width') < input_props.get('width') and
-                dimensions.get('height') < input_props.get('height')):
+        if not (dimensions.get('width') <= input_props.get('width') and
+                dimensions.get('height') <= input_props.get('height')):
             raise Exception('Can Only Downscale. Your Original image is too small')
 
         args = [

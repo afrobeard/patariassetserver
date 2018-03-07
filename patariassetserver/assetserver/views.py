@@ -18,7 +18,7 @@ def ingest_image(request):
             resp = JsonResponse({"error_message": "image path not coming through"})
             resp.status_code = 400
             return resp
-        image_class = request.GET.get('class', 'media_tile')
+        image_class = request.GET.get('class', 'normal_tile')
         image_class_int = dict([(x[1], x[0]) for x in IMAGE_CLASSES]).get(image_class)
         try:
             image_path_copy = make_image_path(settings.ORIGINAL_BASE_PATH)
@@ -65,7 +65,7 @@ def get_derivative_info(request, guid, size=None):
 
 @csrf_exempt
 def get_derivative(request, guid, size=None):
-    size = size if size else "medium"
+    size = size if size else "tile_web"
 
     if not guid or size not in IMAGE_CLASS_SIZES_REVERSE.keys():
         resp = JsonResponse({"error_message": "guid not supplied or invalid size"})
