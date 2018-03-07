@@ -8,6 +8,7 @@ import uuid
 # Create your models here.
 class Asset(models.Model):
     identifier = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    asset_type = models.CharField(max_length=100)
     file_path = models.CharField(max_length=200)
     file_size = models.IntegerField()  # Computed
     checksum = models.CharField(max_length=100)  # Computed
@@ -130,11 +131,12 @@ class MasterImage(ImageAsset):
         return ret_json
 
     @staticmethod
-    def create_from_path(file_path, external_identifier, image_class):
+    def create_from_path(file_path, external_identifier, image_class, asset_type):
         print(repr((file_path, external_identifier, image_class)))
         image = MasterImage(file_path=file_path)
         ImageAsset.populate_image_fields(image)
         image.external_identifier = external_identifier
+        image.asset_type = asset_type
         image.image_class = image_class
         image.save()
         image.create_derivatives()

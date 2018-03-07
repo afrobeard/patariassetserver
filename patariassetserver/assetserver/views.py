@@ -14,8 +14,13 @@ def ingest_image(request):
     if request.method == "POST":
         image_path = request.META.get('HTTP_X_FILE_NAME')
         external_identifier = request.GET.get('external_identifier')
+        asset_type = request.GET.get('asset_type')
         if image_path is None:
             resp = JsonResponse({"error_message": "image path not coming through"})
+            resp.status_code = 400
+            return resp
+        if external_identifier is None or asset_type is None:
+            resp = JsonResponse({"error_message": "external_identifier and asset_type are both required"})
             resp.status_code = 400
             return resp
         image_class = request.GET.get('class', 'normal_tile')
@@ -23,7 +28,7 @@ def ingest_image(request):
         try:
             image_path_copy = make_image_path(settings.ORIGINAL_BASE_PATH)
             shutil.copyfile(image_path, image_path_copy)
-            image = MasterImage.create_from_path(image_path_copy, external_identifier, image_class_int)
+            image = MasterImage.create_from_path(image_path_copy, external_identifier, image_class_int, asset_type)
             return JsonResponse(image.get_json())
         except Exception as e:
             from traceback import print_exc, print_stack
@@ -53,7 +58,7 @@ def get_asset_info(request, guid):
 
 @csrf_exempt
 def get_derivative_info(request, guid, size=None):
-    size = size if size else "medium"
+    size = size if size else "tile_web"
 
     if not guid or size not in IMAGE_CLASS_SIZES_REVERSE.keys():
         resp = JsonResponse({"error_message": "guid not supplied or invalid size"})
@@ -62,6 +67,9 @@ def get_derivative_info(request, guid, size=None):
     derivative_image = DerivativeImage.objects.get(image_class_size=IMAGE_CLASS_SIZES_REVERSE[size], parent=UUID(guid))
     return JsonResponse(derivative_image.get_json())
 
+@csrf_exempt
+def get_asset_from_objectid(request):
+    pass
 
 @csrf_exempt
 def get_derivative(request, guid, size=None):
