@@ -8,7 +8,6 @@ import uuid
 # Create your models here.
 class Asset(models.Model):
     identifier = models.UUIDField(primary_key=True, default=uuid.uuid4)
-    asset_type = models.CharField(max_length=100)
     file_path = models.CharField(max_length=200)
     file_size = models.IntegerField()  # Computed
     checksum = models.CharField(max_length=100)  # Computed
@@ -60,7 +59,7 @@ IMAGE_PROFILE_DATA = {  # Maybe in the future this can be parsed from a json fil
 class ImageAsset(Asset):
     width = models.IntegerField()
     height = models.IntegerField()
-    type = models.IntegerField(choices=IMAGE_TYPES)
+    image_type = models.IntegerField(choices=IMAGE_TYPES)
 
     class Meta:
         abstract = True
@@ -77,13 +76,13 @@ class ImageAsset(Asset):
         image_object.height = properties_dict.get('height')
 
         matched_type_rec = [image_type_code for image_type_code, image_type in IMAGE_TYPES if image_type == properties_dict.get('format')]
-        image_object.type = matched_type_rec[0]
+        image_object.image_type = matched_type_rec[0]
         return image_object
 
     def get_json(self):
         return {
             'guid': str(self.identifier),
-            'type': dict(IMAGE_TYPES)[self.type],
+            'image_type': dict(IMAGE_TYPES)[self.image_type],
             'image_size': self.file_size,
             'checksum': self.checksum,
             'width': self.width,
@@ -131,12 +130,11 @@ class MasterImage(ImageAsset):
         return ret_json
 
     @staticmethod
-    def create_from_path(file_path, external_identifier, image_class, asset_type):
+    def create_from_path(file_path, external_identifier, image_class):
         print(repr((file_path, external_identifier, image_class)))
         image = MasterImage(file_path=file_path)
         ImageAsset.populate_image_fields(image)
         image.external_identifier = external_identifier
-        image.asset_type = asset_type
         image.image_class = image_class
         image.save()
         image.create_derivatives()

@@ -16,13 +16,12 @@ Including another URLconf
 from django.conf.urls import url
 from django.contrib import admin
 
-from assetserver.views import ingest_image, get_derivative, get_asset_info, upload_to_azure
+from assetserver.views import ingest_image, get_derivative, get_asset_info
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^assets/ingest/', ingest_image),
     url(r'^assets/(?P<guid>[\w\-]+)/$', get_derivative),
     url(r'^assets/(?P<guid>[\w\-]+)/(?P<size>[\w\-]+)/$', get_derivative),
-    url(r'^assets/(?P<guid>[\w\-]+).json$', get_asset_info),
-    url(r'^upload/azure', upload_to_azure)
+    url(r'^assets/(?P<guid>[\w\-]+).json$', get_asset_info)
 ]

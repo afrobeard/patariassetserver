@@ -14,13 +14,13 @@ def ingest_image(request):
     if request.method == "POST":
         image_path = request.META.get('HTTP_X_FILE_NAME')
         external_identifier = request.GET.get('external_identifier')
-        asset_type = request.GET.get('asset_type')
+
         if image_path is None:
             resp = JsonResponse({"error_message": "image path not coming through"})
             resp.status_code = 400
             return resp
-        if external_identifier is None or asset_type is None:
-            resp = JsonResponse({"error_message": "external_identifier and asset_type are both required"})
+        if external_identifier is None:
+            resp = JsonResponse({"error_message": "external_identifier is required"})
             resp.status_code = 400
             return resp
         image_class = request.GET.get('class', 'normal_tile')
@@ -28,7 +28,7 @@ def ingest_image(request):
         try:
             image_path_copy = make_image_path(settings.ORIGINAL_BASE_PATH)
             shutil.copyfile(image_path, image_path_copy)
-            image = MasterImage.create_from_path(image_path_copy, external_identifier, image_class_int, asset_type)
+            image = MasterImage.create_from_path(image_path_copy, external_identifier, image_class_int)
             return JsonResponse(image.get_json())
         except Exception as e:
             from traceback import print_exc, print_stack
@@ -88,31 +88,31 @@ def get_derivative(request, guid, size=None):
     return response
 
 
-@csrf_exempt
-def upload_to_azure(request):
-    if request.method == "POST":
-        image_path = request.META.get('HTTP_X_FILE_NAME')
-        blob_name = request.GET.get('blob')
+# @csrf_exempt
+# def upload_to_azure(request):
+#     if request.method == "POST":
+#         image_path = request.META.get('HTTP_X_FILE_NAME')
+#         blob_name = request.GET.get('blob')
 
-        if blob_name is None or image_path is None:
-            resp = JsonResponse({"error_message": "Missing parameters"})
-            resp.status_code = 400
-            return resp
+#         if blob_name is None or image_path is None:
+#             resp = JsonResponse({"error_message": "Missing parameters"})
+#             resp.status_code = 400
+#             return resp
 
-        block_blob_service = BlockBlobService(account_name=settings.AZURE_ACCOUNT_NAME,
-                                              account_key=settings.AZURE_ACCOUNT_KEY)
-        try:
-            block_blob_service.create_blob_from_path(container_name=settings.AZURE_CONTAINER_NAME,
-                                                     blob_name=blob_name,
-                                                     file_path=image_path)
-            response = JsonResponse({"message": "Success"})
-            response.status_code = 200
-        except Exception as e:
-            print(e)
-            response = JsonResponse({"message": "Something went wrong"})
-            response.status_code = 500
-        return response
-    else:
-        res = JsonResponse({"error_message": "Wrong Method"})
-        res.status_code = 400
-        return res
+#         block_blob_service = BlockBlobService(account_name=settings.AZURE_ACCOUNT_NAME,
+#                                               account_key=settings.AZURE_ACCOUNT_KEY)
+#         try:
+#             block_blob_service.create_blob_from_path(container_name=settings.AZURE_CONTAINER_NAME,
+#                                                      blob_name=blob_name,
+#                                                      file_path=image_path)
+#             response = JsonResponse({"message": "Success"})
+#             response.status_code = 200
+#         except Exception as e:
+#             print(e)
+#             response = JsonResponse({"message": "Something went wrong"})
+#             response.status_code = 500
+#         return response
+#     else:
+#         res = JsonResponse({"error_message": "Wrong Method"})
+#         res.status_code = 400
+#         return res
