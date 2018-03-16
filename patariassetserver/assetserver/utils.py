@@ -1,6 +1,9 @@
 import os
 import json
 import hashlib
+import random as rnd
+from azure.storage.blob import BlockBlobService
+from patariassetserver import settings
 
 
 def get_size(file_path):
@@ -53,3 +56,30 @@ def make_error_obj_from_validation_error(ve):
                         "errors": v
                     })
     return err_obj
+
+
+def get_random_string():
+    chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxyz"
+    string_length = 8
+    randomstring = ''
+    for i in range(0, string_length):
+        rnum = int(rnd.random() * len(chars))
+        randomstring += chars[rnum: rnum + 1]
+    return randomstring
+
+
+def upload_image_to_azure(blob_name, file_path):
+
+    print("uploading:" + blob_name + " from " + file_path)
+
+    block_blob_service = BlockBlobService(account_name=settings.AZURE_ACCOUNT_NAME,
+                                          account_key=settings.AZURE_ACCOUNT_KEY)
+
+    try:
+        block_blob_service.create_blob_from_path(container_name=settings.AZURE_CONTAINER_NAME,
+                                                 blob_name=blob_name,
+                                                 file_path=file_path)
+    except Exception as e:
+        print(e)
+        return False
+    return True
