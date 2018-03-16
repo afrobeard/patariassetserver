@@ -85,24 +85,33 @@ def ingest_image(request):
 
 
 @csrf_exempt
-def get_asset_info(request, guid):
-    if not guid:
-        resp = JsonResponse({"error_message": "guid not supplied"})
+def get_asset_info(request, object_id):
+    if not object_id:
+        resp = JsonResponse({"error_message": "object_id not supplied"})
         resp.status_code = 400
         return resp
-    image = MasterImage.objects.get(identifier=UUID(guid))
+    image = MasterImage.objects.filter(external_identifier=object_id).latest('created_date')
     return JsonResponse(image.get_json())
 
 
 @csrf_exempt
-def get_derivative_info(request, guid, size=None):
+def get_derivative_info(request, object_id, size=None):
     size = size if size else "tile_web"
 
-    if not guid or size not in IMAGE_CLASS_SIZES_REVERSE.keys():
-        resp = JsonResponse({"error_message": "guid not supplied or invalid size"})
+    if not object_id or size not in IMAGE_CLASS_SIZES_REVERSE.keys():
+        resp = JsonResponse({"error_message": "object_id not supplied or invalid size"})
         resp.status_code = 400
         return resp
-    derivative_image = DerivativeImage.objects.get(image_class_size=IMAGE_CLASS_SIZES_REVERSE[size], parent=UUID(guid))
+
+    try:
+        master_image = MasterImage.objects.filter(external_identifier=object_id).latest('created_date')
+        derivative_image = DerivativeImage.objects.get(image_class_size=IMAGE_CLASS_SIZES_REVERSE[size],
+                                                       parent=master_image.identifier)
+    except Exception as e:
+        resp = JsonResponse({"error_message": "asset not found"})
+        resp.status_code = 404
+        return resp
+
     return JsonResponse(derivative_image.get_json())
 
 
@@ -112,14 +121,23 @@ def get_asset_from_objectid(request):
 
 
 @csrf_exempt
-def get_derivative(request, guid, size=None):
+def get_derivative(request, object_id, size=None):
     size = size if size else "tile_web"
 
-    if not guid or size not in IMAGE_CLASS_SIZES_REVERSE.keys():
-        resp = JsonResponse({"error_message": "guid not supplied or invalid size"})
+    if not object_id or size not in IMAGE_CLASS_SIZES_REVERSE.keys():
+        resp = JsonResponse({"error_message": "object_id not supplied or invalid size"})
         resp.status_code = 400
         return resp
-    derivative_image = DerivativeImage.objects.get(image_class_size=IMAGE_CLASS_SIZES_REVERSE[size], parent=UUID(guid))
+
+    try:
+        master_image = MasterImage.objects.filter(external_identifier=object_id).latest('created_date')
+        derivative_image = DerivativeImage.objects.get(image_class_size=IMAGE_CLASS_SIZES_REVERSE[size],
+                                                       parent=master_image.identifier)
+    except Exception as e:
+        resp = JsonResponse({"error_message": "asset not found"})
+        resp.status_code = 404
+        return resp
+
     response = HttpResponse(derivative_image.get_json(), status=200)
     file_path = derivative_image.file_path
     file_path_li = ['', 'media'] + file_path.split('/')[-4:]  # derivatives/2018/2/guid.jpeg
