@@ -2,6 +2,7 @@ from django.db import models
 from .utils import get_size, get_checksum
 from .imageutils import ImageMagickWrapper, make_image_path
 from django.conf import settings
+from django.contrib.postgres.fields import JSONField
 import uuid
 
 
@@ -15,6 +16,30 @@ class Asset(models.Model):
 
     class Meta:
         abstract = True
+
+
+BACKUP_TYPES = [
+    (0, 'AZURE')
+]
+
+
+class Backup(models.Model):
+    # linked_asset = models.ForeignKey('MasterImage')
+    backup_service = models.IntegerField(choices=BACKUP_TYPES)
+    identifier = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    created_date = models.DateTimeField(auto_now_add=True)  # Auto Generated
+
+    class Meta:
+        abstract = True
+
+
+class AzureBackup(Backup):
+    PATH_PREFIX = "https://patarimedia.blob.core.windows.net/patari/"
+    linked_asset = models.ForeignKey('MasterImage')
+    derivatives = JSONField(default = {})
+
+    def get_path(self):
+        return "{}{}".format(AzureBackup.PATH_PREFIX, self.identifier)
 
 
 IMAGE_TYPES = [
