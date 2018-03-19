@@ -22,33 +22,44 @@ IMAGE_TYPES = [
     (1, 'PNG')
 ]
 
+
 IMAGE_CLASSES = [
-    (0, 'media_banner'),
-    (1, 'media_tile'),
-    (2, 'nav_banner'),
+    (0, 'normal_tile'),
+    (1, 'featured_tile')
 ]
 
 IMAGE_CLASS_SIZES = [
-    (0, 'small'),
-    (1, 'medium'),
-    (2, 'large'),
+    (0,'thumbnail'),
+    (1,'tile_web'),
+    (2,'tile_mobile_1x'),
+    (3,'tile_mobile_2x'),
+    (4,'tile_mobile_3x'),
 ]
+
+IMAGE_CLASSES_QUALITY = [
+    (0, 80),
+    (1, 90)
+]
+
+
 
 IMAGE_CLASS_SIZES_REVERSE = dict([(x[1], x[0]) for x in IMAGE_CLASS_SIZES])
 
-IMAGE_PROFILE_DATA = {  # Maybe in the future this can be parsed from a json file
-    0: {1: {'width': 900, 'height': 200}},  # Media Banner
-    2: {1: {'width': 1181, 'height': 220}},  # Nav Banner
-    1: {0: {'width': 50, 'height': 50},
-        1: {'width': 125, 'height': 125},
-        2: {'width': 250, 'height': 250}}
-}
 
+IMAGE_PROFILE_DATA = {  # Maybe in the future this can be parsed from a json file
+    0: {0: {'width': 50,  'height': 50},
+        1: {'width': 180, 'height': 180},
+        2: {'width': 120, 'height': 120},
+        3: {'width': 240, 'height': 240},
+        4: {'width': 360, 'height': 360}},
+    1: {1: {'width': 900, 'height': 200},
+        2: {'width': 900, 'height': 200}}
+}
 
 class ImageAsset(Asset):
     width = models.IntegerField()
     height = models.IntegerField()
-    type = models.IntegerField(choices=IMAGE_TYPES)
+    image_type = models.IntegerField(choices=IMAGE_TYPES)
 
     class Meta:
         abstract = True
@@ -65,13 +76,13 @@ class ImageAsset(Asset):
         image_object.height = properties_dict.get('height')
 
         matched_type_rec = [image_type_code for image_type_code, image_type in IMAGE_TYPES if image_type == properties_dict.get('format')]
-        image_object.type = matched_type_rec[0]
+        image_object.image_type = matched_type_rec[0]
         return image_object
 
     def get_json(self):
         return {
             'guid': str(self.identifier),
-            'type': dict(IMAGE_TYPES)[self.type],
+            'image_type': dict(IMAGE_TYPES)[self.image_type],
             'image_size': self.file_size,
             'checksum': self.checksum,
             'width': self.width,
@@ -89,9 +100,10 @@ class DerivativeImage(ImageAsset):
 
     def save(self, *args, **kwargs):
         dims = IMAGE_PROFILE_DATA[self.image_class][self.image_class_size]
+        quality = IMAGE_CLASSES_QUALITY[self.image_class][1]
         parent_path = self.parent.file_path
         image_path = make_image_path(settings.DERIVATIVE_BASE_PATH)
-        thumbnail_path = ImageMagickWrapper.create_thumbnail(parent_path, image_path, dims)
+        thumbnail_path = ImageMagickWrapper.create_thumbnail(parent_path, image_path, dims, quality)
         self.file_path = thumbnail_path
         ImageAsset.populate_image_fields(self)  # To get all the properties
         super(DerivativeImage, self).save()  # Save the super class

@@ -16,12 +16,12 @@ Including another URLconf
 from django.conf.urls import url
 from django.contrib import admin
 
-from assetserver.views import ingest_image, get_derivative, get_asset_info
+from assetserver.views import ingest_image, get_derivative, get_asset_info, get_derivative_info
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^assets/ingest/', ingest_image),
-    url(r'^assets/(?P<guid>[\w\-]+)/$', get_derivative),
-    url(r'^assets/(?P<guid>[\w\-]+)/(?P<size>[\w\-]+)/$', get_derivative),
-    url(r'^assets/(?P<guid>[\w\-]+).json$', get_asset_info)
+    url(r'^assets/(?P<object_id>[\w\-]+)/$', get_derivative),
+    url(r'^assets/(?P<object_id>[\w\-]+)/(?P<size>[\w\-]+)/$', get_derivative),
+    url(r'^assets/(?P<object_id>[\w\-]+).json$', get_asset_info)
 ]
