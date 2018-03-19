@@ -21,7 +21,12 @@ from assetserver.views import ingest_image, get_derivative, get_asset_info, get_
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^assets/ingest/', ingest_image),
-    url(r'^assets/(?P<object_id>[\w\-]+)/$', get_derivative),
-    url(r'^assets/(?P<object_id>[\w\-]+)/(?P<size>[\w\-]+)/$', get_derivative),
-    url(r'^assets/(?P<object_id>[\w\-]+).json$', get_asset_info)
+
+    url(r'^assets/e/(?P<identifier>[\w\-]+)/$', get_derivative),
+    url(r'^assets/e/(?P<identifier>[\w\-]+)/(?P<size>[\w\-]+)/$', get_derivative),
+    url(r'^assets/e/(?P<identifier>[\w\-]+).json$', get_asset_info),
+
+    url(r'^assets/(?P<identifier>[\w\-]+)/$', get_derivative),
+    url(r'^assets/(?P<identifier>[\w\-]+)/(?P<size>[\w\-]+)/$', get_derivative),
+    url(r'^assets/(?P<identifier>[\w\-]+).json$', get_asset_info)
 ]

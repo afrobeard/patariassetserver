@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # To ingest an image against an external identifier
 curl --data-binary "@/Users/afrobeard/Scratch/whitehorse.jpg" "http://localhost:8080/assets/ingest/?external_identifier=banana"
 

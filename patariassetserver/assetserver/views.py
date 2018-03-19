@@ -13,7 +13,6 @@ def ingest_image(request):
     if request.method == "POST":
         image_path = request.META.get('HTTP_X_FILE_NAME')
         external_identifier = request.GET.get('external_identifier')
-        upload_to_azure = request.GET.get('upload_to_azure')
 
         if image_path is None:
             resp = JsonResponse({"error_message": "image path not coming through"})
@@ -21,11 +20,6 @@ def ingest_image(request):
             return resp
         if external_identifier is None:
             resp = JsonResponse({"error_message": "external_identifier is required"})
-            resp.status_code = 400
-            return resp
-
-        if upload_to_azure is None:
-            resp = JsonResponse({"error_message": "upload_to_azure is required"})
             resp.status_code = 400
             return resp
 
@@ -37,7 +31,7 @@ def ingest_image(request):
             image = MasterImage.create_from_path(image_path_copy, external_identifier, image_class_int)
 
             res_obj = image.get_json()
-
+            """
             if upload_to_azure == 'true':
 
                 # copy files over (tile and thumb)
@@ -66,7 +60,7 @@ def ingest_image(request):
 
                 uploaded_to_azure = {'tile': a_tile_file_name, 'thumb': a_thumb_file_name}
                 res_obj['uploaded_to_azure'] = uploaded_to_azure
-
+            """
             return JsonResponse(res_obj)
         except Exception as e:
             from traceback import print_exc, print_stack
@@ -85,56 +79,75 @@ def ingest_image(request):
 
 
 @csrf_exempt
-def get_asset_info(request, object_id):
-    if not object_id:
+def get_asset_info(request, identifier):
+    ext_id = request.path.startswith('/assets/e/')
+    if not identifier:
         resp = JsonResponse({"error_message": "object_id not supplied"})
         resp.status_code = 400
         return resp
-    image = MasterImage.objects.filter(external_identifier=object_id).latest('created_date')
-    return JsonResponse(image.get_json())
 
+    if ext_id:
+        image_rs = MasterImage.objects.filter(external_identifier=identifier)
+    else:
+        image_rs = MasterImage.objects.filter(identifier=identifier)
 
-@csrf_exempt
-def get_derivative_info(request, object_id, size=None):
-    size = size if size else "tile_web"
-
-    if not object_id or size not in IMAGE_CLASS_SIZES_REVERSE.keys():
-        resp = JsonResponse({"error_message": "object_id not supplied or invalid size"})
-        resp.status_code = 400
-        return resp
-
-    try:
-        master_image = MasterImage.objects.filter(external_identifier=object_id).latest('created_date')
-        derivative_image = DerivativeImage.objects.get(image_class_size=IMAGE_CLASS_SIZES_REVERSE[size],
-                                                       parent=master_image.identifier)
-    except Exception as e:
-        resp = JsonResponse({"error_message": "asset not found"})
+    if image_rs:
+        image = image_rs.latest('created_date')
+        return JsonResponse(image.get_json())
+    else:
+        resp = JsonResponse({"error_message": "Asset does not exist"})
         resp.status_code = 404
         return resp
 
-    return JsonResponse(derivative_image.get_json())
-
 
 @csrf_exempt
-def get_asset_from_objectid(request):
-    pass
-
-
-@csrf_exempt
-def get_derivative(request, object_id, size=None):
+def get_derivative_info(request, identifier, size=None):
+    ext_id = request.path.startswith('/assets/e/')
     size = size if size else "tile_web"
 
-    if not object_id or size not in IMAGE_CLASS_SIZES_REVERSE.keys():
+    if not identifier or size not in IMAGE_CLASS_SIZES_REVERSE.keys():
         resp = JsonResponse({"error_message": "object_id not supplied or invalid size"})
         resp.status_code = 400
         return resp
 
-    try:
-        master_image = MasterImage.objects.filter(external_identifier=object_id).latest('created_date')
+    if ext_id:
+        image_rs = MasterImage.objects.filter(external_identifier=identifier)
+    else:
+        image_rs = MasterImage.objects.filter(identifier=identifier)
+
+    if image_rs:
+        master_image = image_rs.latest('created_date')
+        derivative_image = DerivativeImage.objects.get(image_class_size=IMAGE_CLASS_SIZES_REVERSE[size],
+                                                   parent=master_image.identifier)
+        return JsonResponse(derivative_image.get_json())
+    else:
+        resp = JsonResponse({"error_message": "Asset does not exist"})
+        resp.status_code = 404
+        return resp
+
+
+@csrf_exempt
+def get_derivative(request, identifier, size=None, ):
+    ext_id = request.path.startswith('/assets/e/')
+    size = size if size else "tile_web"
+
+    if ext_id:
+        image_rs = MasterImage.objects.filter(external_identifier=identifier)
+    else:
+        image_rs = MasterImage.objects.filter(identifier=identifier)
+
+    if not identifier or size not in IMAGE_CLASS_SIZES_REVERSE.keys():
+        resp = JsonResponse({"error_message": "object_id not supplied or invalid size"})
+        resp.status_code = 400
+        return resp
+
+    if image_rs:
+        master_image = image_rs.latest('created_date')
+        master_image = MasterImage.objects.filter(external_identifier=identifier).latest('created_date')
         derivative_image = DerivativeImage.objects.get(image_class_size=IMAGE_CLASS_SIZES_REVERSE[size],
                                                        parent=master_image.identifier)
-    except Exception as e:
-        resp = JsonResponse({"error_message": "asset not found"})
+    else:
+        resp = JsonResponse({"error_message": "Asset does not exist"})
         resp.status_code = 404
         return resp
 
