@@ -16,10 +16,10 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         forever = "false" in options.get('forever', '').lower()
         while True:
-            if True:  # try:
+            try:
                 AzureBackup.make_backups(dry_run=False)
-            #except Exception as e:
-            #    self.stdout.write(self.style.ERROR("Some Exception {} occurred during backup".format(repr(e))))
+            except Exception as e:
+                self.stdout.write(self.style.ERROR("Some Exception {} occurred during backup".format(repr(e))))
             if forever:
                 break
             time.sleep(2)
