@@ -68,13 +68,12 @@ def get_random_string():
     return randomstring
 
 
-def upload_image_to_azure(blob_name, file_path):
-
-    print("uploading:" + blob_name + " from " + file_path)
-
+def upload_image_to_azure(blob_name, file_path, dry_run=True):
+    if dry_run:
+        return dry_run
+    print("uploading: {} from {}".format(blob_name, file_path))
     block_blob_service = BlockBlobService(account_name=settings.AZURE_ACCOUNT_NAME,
                                           account_key=settings.AZURE_ACCOUNT_KEY)
-
     try:
         block_blob_service.create_blob_from_path(container_name=settings.AZURE_CONTAINER_NAME,
                                                  blob_name=blob_name,

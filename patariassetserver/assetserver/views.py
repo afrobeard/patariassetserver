@@ -1,11 +1,10 @@
-from assetserver.models import IMAGE_CLASSES, IMAGE_CLASS_SIZES_REVERSE, MasterImage, DerivativeImage
+import shutil
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse, HttpResponse
-from assetserver.utils import make_error_obj_from_validation_error, get_random_string, upload_image_to_azure
-from assetserver.imageutils import make_image_path
-from patariassetserver import settings
-from uuid import UUID
-import shutil
+from .models import IMAGE_CLASSES, IMAGE_CLASS_SIZES_REVERSE, MasterImage, DerivativeImage
+from .utils import make_error_obj_from_validation_error, get_random_string, upload_image_to_azure
+from .imageutils import make_image_path
+import patariassetserver.settings as settings
 
 
 @csrf_exempt
@@ -29,38 +28,7 @@ def ingest_image(request):
             image_path_copy = make_image_path(settings.ORIGINAL_BASE_PATH)
             shutil.copyfile(image_path, image_path_copy)
             image = MasterImage.create_from_path(image_path_copy, external_identifier, image_class_int)
-
             res_obj = image.get_json()
-            """
-            if upload_to_azure == 'true':
-
-                # copy files over (tile and thumb)
-
-                azure_upload_path = settings.AZURE_UPLOAD_PATH
-                azure_tile_image_path = image.derivatives[IMAGE_CLASS_SIZES_REVERSE.get('tile_mobile_3x')].file_path
-                azure_thumbnail_path = image.derivatives[IMAGE_CLASS_SIZES_REVERSE.get('thumbnail')].file_path
-
-                a_thumb_file_name = get_random_string() + '.jpg'
-                a_tile_file_name = get_random_string() + '.jpg'
-
-                a_thumb_path = azure_upload_path + '/' + a_thumb_file_name
-                a_tile_path = azure_upload_path + '/' + a_tile_file_name
-
-                shutil.copyfile(azure_tile_image_path, a_tile_path)
-                shutil.copyfile(azure_thumbnail_path, a_thumb_path)
-
-                # upload files to azure
-                first_uploaded = upload_image_to_azure(a_thumb_file_name, a_thumb_path)
-                second_uploaded = upload_image_to_azure(a_tile_file_name, a_tile_path)
-
-                if not first_uploaded or not second_uploaded:
-                    resp = JsonResponse({"error_message": "upload to azure failed, try again"})
-                    resp.status_code = 500
-                    return resp
-
-                uploaded_to_azure = {'tile': a_tile_file_name, 'thumb': a_thumb_file_name}
-                res_obj['uploaded_to_azure'] = uploaded_to_azure
-            """
             return JsonResponse(res_obj)
         except Exception as e:
             from traceback import print_exc, print_stack

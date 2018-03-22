@@ -1,5 +1,5 @@
 from django.db import models
-from .utils import get_size, get_checksum
+from .utils import get_size, get_checksum, upload_image_to_azure
 from .imageutils import ImageMagickWrapper, make_image_path
 from django.conf import settings
 from django.contrib.postgres.fields import JSONField
@@ -36,10 +36,38 @@ class Backup(models.Model):
 class AzureBackup(Backup):
     PATH_PREFIX = "https://patarimedia.blob.core.windows.net/patari/"
     linked_asset = models.ForeignKey('MasterImage')
-    derivatives = JSONField(default = {})
+    derivatives = JSONField(default = [])
 
+    @staticmethod
     def get_path(self):
         return "{}{}".format(AzureBackup.PATH_PREFIX, self.identifier)
+
+    @staticmethod
+    def make_backups(drop_backups=False, dry_run=True):
+        if drop_backups:
+            raise Exception("not Implemented")
+
+        for master_image in MasterImage.objects.filter(azurebackup=None):
+            pass_record = False
+            temp_uuid = uuid.uuid4()
+
+            if not upload_image_to_azure(temp_uuid, master_image.file_path, dry_run=dry_run):
+                print("Error uploading to Azure")
+                continue
+
+            derivatives_json = []
+            for derivative in DerivativeImage.objects.filter(parent=master_image):
+                if not upload_image_to_azure(temp_uuid, derivative.file_path, dry_run=dry_run):
+                    print("Error uploading to Azure")
+                    break
+                derivatives_json.append(derivative.identifier)
+
+            if pass_record:
+                continue
+
+            ab = AzureBackup(linked_asset=master_image, backup_service=0, identifier=temp_uuid,
+                             derivatives=[str(x) for x in derivatives_json])
+            ab.save()
 
 
 IMAGE_TYPES = [
@@ -104,7 +132,7 @@ class ImageAsset(Asset):
         image_object.image_type = matched_type_rec[0]
         return image_object
 
-    def get_json(self):
+    def get_json(self, has_backup=False):
         return {
             'guid': str(self.identifier),
             'image_type': dict(IMAGE_TYPES)[self.image_type],
@@ -112,6 +140,7 @@ class ImageAsset(Asset):
             'checksum': self.checksum,
             'width': self.width,
             'height': self.height,
+            'external_path': AzureBackup.get_path(self) if has_backup else None
         }
 
 
@@ -133,8 +162,8 @@ class DerivativeImage(ImageAsset):
         ImageAsset.populate_image_fields(self)  # To get all the properties
         super(DerivativeImage, self).save()  # Save the super class
 
-    def get_json(self):
-        ret_json = super(DerivativeImage, self).get_json()
+    def get_json(self, has_backup=False):
+        ret_json = super(DerivativeImage, self).get_json(has_backup=has_backup)
         ret_json.update({
             'derivative_class_size': dict(IMAGE_CLASS_SIZES).get(self.image_class_size)
         })
@@ -145,12 +174,14 @@ class MasterImage(ImageAsset):
     external_identifier = models.CharField(max_length=100, null=True)
     image_class = models.IntegerField(choices=IMAGE_CLASSES)
 
-    def get_json(self):
-        ret_json = super(MasterImage, self).get_json()
+    def get_json(self, has_backup=False):
+        has_backup = AzureBackup.objects.filter(linked_asset=self)
+
+        ret_json = super(MasterImage, self).get_json(has_backup=has_backup)
         ret_json.update({
             'class': dict(IMAGE_CLASSES).get(self.image_class),
             'external_identifier': self.external_identifier,
-            'derivatives': [derivative.get_json() for derivative in self.derivatives]
+            'derivatives': [derivative.get_json(has_backup=has_backup) for derivative in self.derivatives]
         })
         return ret_json
 
