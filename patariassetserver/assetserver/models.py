@@ -57,7 +57,7 @@ class AzureBackup(Backup):
 
             derivatives_json = []
             for derivative in DerivativeImage.objects.filter(parent=master_image):
-                if not upload_image_to_azure(temp_uuid, derivative.file_path, dry_run=dry_run):
+                if not upload_image_to_azure(derivative.identifier, derivative.file_path, dry_run=dry_run):
                     print("Error uploading to Azure")
                     break
                 derivatives_json.append(derivative.identifier)
