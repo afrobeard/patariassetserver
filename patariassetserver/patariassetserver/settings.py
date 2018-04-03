@@ -78,12 +78,12 @@ WSGI_APPLICATION = 'patariassetserver.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'patariassetserver',
-        'USER': 'postgres',
-        'PASSWORD': 'postgres',
-        'HOST': '127.0.0.1',
-        'PORT': '5432',
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'assetserverdb',
+        'USER': 'assetserver',
+        'PASSWORD': '4e4ed27a-bf9a-4c72-ba4a-65d6221c6ff5',
+        'HOST': 'localhost',
+        'PORT': ''
     }
 }
 
@@ -106,9 +106,9 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-ORIGINAL_BASE_PATH = '/Users/afrobeard/Scratch/media/original'
-DERIVATIVE_BASE_PATH = '/Users/afrobeard/Scratch/media/derivatives'
-AZURE_UPLOAD_PATH = '/Users/afrobeard/Scratch/media/azure_uploads'
+ORIGINAL_BASE_PATH = '/root/assets/media/original'
+DERIVATIVE_BASE_PATH = '/root/assets/media/derivatives'
+AZURE_UPLOAD_PATH = '/root/assets/media/azure_uploads'
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.11/topics/i18n/
