@@ -23,7 +23,6 @@ class ImageMagickWrapper(object):
     def get_properties(file_path):
         cmd = 'identify -format "%m %G %x %y" {}'.format(file_path)
         output = execute_cmd(cmd)
-        print(repr(output.split(' ')))
         (format_str, dim_str, xdensity, ydensity) = output.split(' ')
         (width, height) = dim_str.split('x')
 
@@ -51,7 +50,6 @@ class ImageMagickWrapper(object):
         :return:
         """
         input_props = ImageMagickWrapper.get_properties(input_path)
-        print(repr(input_props))
         if not (dimensions.get('width') <= input_props.get('width') and
                 dimensions.get('height') <= input_props.get('height')):
             raise Exception('Can Only Downscale. Your Original image is too small')
@@ -73,14 +71,13 @@ class ImageMagickWrapper(object):
         output = execute_cmd(cmd)
         if output_path in output:
             return output_path
-        print(output)
         raise Exception("Error during conversion")
 
 
 if __name__ == "__main__":
     """
     print(make_image_path('/Users/afrobeard/Scratch/assets/derivatives'))
-    
+
 ImageMagickWrapper.create_thumbnail('/usr/share/doc/ntp/pic/stack1a.jpg',
                                     '/Users/afrobeard/monkeyman.jpg',
                                     {'width': 50, 'height': 50}, density=10)
@@ -89,5 +86,5 @@ ImageMagickWrapper.create_thumbnail('/usr/share/doc/ntp/pic/stack1a.jpg',
 from assetserver.models import *;
 path = '/Users/afrobeard/Scratch/whitehorse.jpg'
 m1 = MasterImage.create_from_path(path, 'bozo', 1)
-    
+
     """

@@ -71,7 +71,7 @@ def get_random_string():
 def upload_image_to_azure(blob_name, file_path, dry_run=True):
     if dry_run:
         return dry_run
-    print("uploading: {} from {}".format(blob_name, file_path))
+    print("uploading to azure: {} from {}".format(blob_name, file_path))
     block_blob_service = BlockBlobService(account_name=settings.AZURE_ACCOUNT_NAME,
                                           account_key=settings.AZURE_ACCOUNT_KEY)
     try:

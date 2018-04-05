@@ -36,7 +36,7 @@ class Backup(models.Model):
 class AzureBackup(Backup):
     PATH_PREFIX = "https://patarimedia.blob.core.windows.net/patari/"
     linked_asset = models.ForeignKey('MasterImage')
-    derivatives = JSONField(default = [])
+    derivatives = JSONField(default=[])
 
     @staticmethod
     def get_path(self):
@@ -82,18 +82,17 @@ IMAGE_CLASSES = [
 ]
 
 IMAGE_CLASS_SIZES = [
-    (0,'thumbnail'),
-    (1,'tile_web'),
-    (2,'tile_mobile_1x'),
-    (3,'tile_mobile_2x'),
-    (4,'tile_mobile_3x'),
+    (0, 'thumbnail'),
+    (1, 'tile_web'),
+    (2, 'tile_mobile_1x'),
+    (3, 'tile_mobile_2x'),
+    (4, 'tile_mobile_3x'),
 ]
 
 IMAGE_CLASSES_QUALITY = [
     (0, 80),
     (1, 90)
 ]
-
 
 
 IMAGE_CLASS_SIZES_REVERSE = dict([(x[1], x[0]) for x in IMAGE_CLASS_SIZES])
@@ -108,6 +107,7 @@ IMAGE_PROFILE_DATA = {  # Maybe in the future this can be parsed from a json fil
     1: {1: {'width': 900, 'height': 200},
         2: {'width': 900, 'height': 200}}
 }
+
 
 class ImageAsset(Asset):
     width = models.IntegerField()
@@ -128,7 +128,8 @@ class ImageAsset(Asset):
         image_object.width = properties_dict.get('width')
         image_object.height = properties_dict.get('height')
 
-        matched_type_rec = [image_type_code for image_type_code, image_type in IMAGE_TYPES if image_type == properties_dict.get('format')]
+        matched_type_rec = [image_type_code for image_type_code, image_type in IMAGE_TYPES
+                            if image_type == properties_dict.get('format')]
         image_object.image_type = matched_type_rec[0]
         return image_object
 
@@ -187,7 +188,6 @@ class MasterImage(ImageAsset):
 
     @staticmethod
     def create_from_path(file_path, external_identifier, image_class):
-        print(repr((file_path, external_identifier, image_class)))
         image = MasterImage(file_path=file_path)
         ImageAsset.populate_image_fields(image)
         image.external_identifier = external_identifier
@@ -199,7 +199,6 @@ class MasterImage(ImageAsset):
     def create_derivatives(self):
         master_image = self
         image_class_sizes = IMAGE_PROFILE_DATA[master_image.image_class]
-        print('PROFILE DATA', repr(image_class_sizes))
 
         derivatives = []
         for image_class_size in image_class_sizes:
@@ -212,7 +211,6 @@ class MasterImage(ImageAsset):
     @property
     def derivatives(self):
         return DerivativeImage.objects.filter(parent=self.identifier)
-
 
     def __str__(self):
         return "ID: {} ExternalID: {}".format(self.identifier, self.external_identifier)

@@ -29,10 +29,12 @@ def ingest_image(request):
             shutil.copyfile(image_path, image_path_copy)
             image = MasterImage.create_from_path(image_path_copy, external_identifier, image_class_int)
             res_obj = image.get_json()
+            print("successfully uploaded for external_identifier:{} as a {}".format(external_identifier, image_class))
             return JsonResponse(res_obj)
         except Exception as e:
             from traceback import print_exc, print_stack
             from django.core.exceptions import ValidationError
+            print("uploading for external_identifier:{} as a {} failed".format(external_identifier, image_class))
             print_stack()
             print_exc()
             if isinstance(e, ValidationError):
@@ -86,7 +88,7 @@ def get_derivative_info(request, identifier, size=None):
     if image_rs:
         master_image = image_rs.latest('created_date')
         derivative_image = DerivativeImage.objects.get(image_class_size=IMAGE_CLASS_SIZES_REVERSE[size],
-                                                   parent=master_image.identifier)
+                                                       parent=master_image.identifier)
         return JsonResponse(derivative_image.get_json())
     else:
         resp = JsonResponse({"error_message": "Asset does not exist"})
