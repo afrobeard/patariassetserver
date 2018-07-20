@@ -34,7 +34,7 @@ class Backup(models.Model):
 
 
 class AzureBackup(Backup):
-    PATH_PREFIX = "https://patarimedia.blob.core.windows.net/patari/"
+    PATH_PREFIX = settings.azure_path_prefix
     linked_asset = models.ForeignKey('MasterImage')
     derivatives = JSONField(default=[])
 
