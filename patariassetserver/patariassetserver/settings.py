@@ -81,7 +81,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'assetserverdb',
         'USER': 'assetserver',
-        'PASSWORD': '4e4ed27a-bf9a-4c72-ba4a-65d6221c6ff5',
+        'PASSWORD': '',
         'HOST': 'localhost',
         'PORT': ''
     }
@@ -129,6 +129,6 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-AZURE_ACCOUNT_NAME = 'patarimedia'
-AZURE_ACCOUNT_KEY = 'F5Vwu51Q64IDR10LdDiZPyeFjrN/cbbfjtkhKvNIB/fzM5wOMSnBmxoruHlsJwYZzt+a4FiYUYyqa0ulNUGkBQ=='
-AZURE_CONTAINER_NAME = 'patari'
+AZURE_ACCOUNT_NAME = ''
+AZURE_ACCOUNT_KEY = ''
+AZURE_CONTAINER_NAME = ''
