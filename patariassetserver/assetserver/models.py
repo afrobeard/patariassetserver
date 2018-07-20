@@ -34,7 +34,7 @@ class Backup(models.Model):
 
 
 class AzureBackup(Backup):
-    PATH_PREFIX = settings.azure_path_prefix
+    PATH_PREFIX = settings.AZURE_PATH_PREFIX
     linked_asset = models.ForeignKey('MasterImage')
     derivatives = JSONField(default=[])
 
