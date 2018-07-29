@@ -113,7 +113,6 @@ def get_derivative(request, identifier, size=None, ):
 
     if image_rs:
         master_image = image_rs.latest('created_date')
-        master_image = MasterImage.objects.filter(external_identifier=identifier).latest('created_date')
         derivative_image = DerivativeImage.objects.get(image_class_size=IMAGE_CLASS_SIZES_REVERSE[size],
                                                        parent=master_image.identifier)
     else:
