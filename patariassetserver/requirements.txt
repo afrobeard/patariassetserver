@@ -1,4 +1,4 @@
-django==1.11.1
+django==1.11.21
 django-transfer
 pathlib
 psycopg2
